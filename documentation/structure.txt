@@ -8,8 +8,8 @@ root
 |   ├── node_modules/ (dependencies)
 |   ├── src/
 |   |   ├── components/
-|   |   |   ├── blocks/
-|   |   |   └── ui/
+|   |   |   ├── blocks/ (custom small components)
+|   |   |   └── ui/ (shadcn components)
 |   |   |   |   ├── button.jsx
 |   |   |   |   └── input.jsx
 |   |   |   └── Navbar.jsx
