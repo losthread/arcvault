@@ -1,5 +1,5 @@
 from .db import conn
-from .schemas import SectionResponse, FolderResponse, PostResponse
+from .schemas import SectionResponse, FolderResponse, PostResponse, PostCreate
 from datetime import datetime
 
 # return all the sections
@@ -23,6 +23,9 @@ def get_sections():
     )
     response.append(section)
   
+  # close cursor
+  cursor.close()
+
   # return json
   return response
 
@@ -30,7 +33,7 @@ def get_sections():
 def get_folders():
   # create a cursor to execute SQL
   cursor = conn.cursor()
-  cursor.execute("SELECT post_id, folder_id, user_id, title, content, created_at, updated_at FROM posts")
+  cursor.execute("SELECT folder_id, section_id, user_id, name, description, slug, created_at, updated_at FROM folders")
 
 
   # fetch query result as a list of tuples
@@ -51,6 +54,9 @@ def get_folders():
     )
     response.append(folder)
 
+  # close cursor
+  cursor.close()
+
   # return json
   return response
 
@@ -58,7 +64,7 @@ def get_folders():
 def get_posts():
   # create a cursor to execute SQL
   cursor = conn.cursor()
-  cursor.execute("SELECT post_id, folder_id, title, content, created_at, updated_at FROM posts")
+  cursor.execute("SELECT post_id, folder_id, user_id, title, content, created_at, updated_at FROM posts")
 
   # fetch query result as a list of tuples
   posts = cursor.fetchall()
@@ -77,5 +83,31 @@ def get_posts():
     )
     response.append(post)
 
+  # close cursor
+  cursor.close()
+
   return response
 
+# create a post
+def create_post(post):
+  # create a cursor to execute SQL
+  cursor = conn.cursor()
+
+  # execute sql query (RETURNING immediately returns the inserted row instead of separate search)
+  cursor.execute(
+    """
+      INSERT INTO posts(user_id, folder_id, title, content)
+      VALUES (%s, %s, %s, %s)
+      RETURNING post_id
+    """,
+    (1, post.folder_id, post.title, post.content)
+  )
+  # store returned tuple
+  row = cursor.fetchone()
+  post_id = row[0]
+
+  # permanently save changes to DB and close
+  conn.commit()
+  cursor.close()
+
+  return {"post_id": post_id}
