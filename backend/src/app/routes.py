@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from .schemas import SectionResponse, FolderResponse, PostResponse, PostCreate, PostUpdate, FolderCreate, NoteCreate, NoteResponse, NoteUpdate, VoteCreate
+from .schemas import SectionResponse, FolderResponse, PostResponse, PostCreate, PostUpdate, FolderCreate, NoteCreate, NoteResponse, NoteUpdate, VoteCreate, TagResponse, TagCreate, ReportCreate
 from . import crud
 
 router = APIRouter()
@@ -94,14 +94,67 @@ async def update_vote(post_id: int, vote: VoteCreate) -> dict:
 async def delete_vote(post_id: int) -> dict:
   return crud.delete_vote(post_id)
 
+# save a post
 @router.post('/saved-posts/{post_id}')
 async def save_post(post_id: int) -> dict:
   return crud.save_post(post_id)
 
+# unsave a post
 @router.delete('/saved-posts/{post_id}')
 async def unsave_post(post_id: int) -> dict:
   return crud.unsave_post(post_id)
 
+# get saved posts
 @router.get('/saved-posts')
 async def get_saved_posts() -> list:
   return crud.get_saved_posts()
+
+# mark a section favorite
+@router.post('/favorite-sections/{section_id}')
+async def favorite_section(section_id: int) -> dict:
+  return crud.favorite_section(section_id)
+
+# unmark a section as favorite
+@router.delete('/favorite-sections/{section_id}')
+async def unfavorite_section(section_id: int) -> dict:
+  return crud.unfavorite_section(section_id)
+
+# get all favorite sections
+@router.get('/favorite-sections')
+async def get_favorite_sections() -> list:
+  return crud.get_favorite_sections()
+
+# get tags
+@router.get('/tags')
+async def get_tags() -> list[TagResponse]:
+  return crud.get_tags()
+
+# get tags on a post
+@router.get('/posts/{post_id}/tags')
+async def get_post_tags(post_id: int) -> list[TagResponse]:
+  return crud.get_post_tags(post_id)
+
+# create a tag
+@router.post('/tags')
+async def create_tag(tag: TagCreate) -> dict:
+  return crud.create_tag(tag.name)
+
+# create a tag on a post
+@router.post('/posts/{post_id}/tags/{tag_id}')
+async def add_tag(post_id: int, tag_id: int) -> dict:
+  return crud.add_tag_to_post(post_id, tag_id)
+
+# remove a tag from a post
+@router.delete('/posts/{post_id}/tags/{tag_id}')
+async def remove_tag(post_id: int, tag_id: int) -> dict:
+  return crud.remove_tag_from_post(post_id, tag_id)
+
+# create a report
+@router.post('/reports')
+async def create_report(report: ReportCreate) -> dict:
+  return crud.create_report(report.post_id, report.reason)
+
+# get reports
+@router.get('/reports')
+async def get_reports() -> list:
+  return crud.get_reports()

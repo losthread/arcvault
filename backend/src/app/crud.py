@@ -1,5 +1,5 @@
 from .db import conn
-from .schemas import SectionResponse, FolderResponse, PostResponse
+from .schemas import SectionResponse, FolderResponse, PostResponse, TagResponse, ReportCreate, ReportResponse
 from datetime import datetime
 from fastapi import HTTPException
 from psycopg2.errors import UniqueViolation, ForeignKeyViolation
@@ -163,6 +163,10 @@ def update_post(post_id, post):
     post_id = row[0]
     return {"post_id": post_id}
   
+  # handle 404
+  except Exception:
+    raise
+  
   except Exception as e:
     handle_error(e, cursor)
 
@@ -193,6 +197,10 @@ def delete_post(post_id):
     conn.commit()
     cursor.close()
     return {"deleted": True}
+  
+  # handle 404
+  except Exception:
+    raise
   
   except Exception as e:
     handle_error(e, cursor)
@@ -251,6 +259,10 @@ def update_folder(folder_id, folder):
     folder_id = row[0]
     return {"folder_id": folder_id}
   
+  # handle 404
+  except Exception:
+    raise
+  
   except Exception as e:
     handle_error(e, cursor)
 
@@ -280,6 +292,10 @@ def delete_folder(folder_id):
     conn.commit()
     cursor.close()
     return {"deleted": True}
+  
+  # handle 404
+  except Exception:
+    raise
   
   except Exception as e:
     handle_error(e, cursor)
@@ -340,6 +356,10 @@ def update_note(note_id, note):
     note_id = row[0]
     return {"note_id": note_id}
   
+  # handle 404
+  except Exception:
+    raise
+  
   except Exception as e:
     handle_error(e, cursor)
 
@@ -369,7 +389,11 @@ def delete_note(note_id):
     conn.commit()
     cursor.close()
     return {"deleted": True}
-  
+
+  # handle 404
+  except Exception:
+    raise  
+
   except Exception as e:
     handle_error(e, cursor)
 
@@ -461,6 +485,10 @@ def update_vote(post_id, vote):
     post_id = row[0]
     return {"post_id": post_id}
   
+  # handle 404
+  except Exception:
+    raise
+  
   except Exception as e:
     handle_error(e, cursor)
 
@@ -542,6 +570,10 @@ def delete_vote(post_id):
     post_id = row[0]
     return {"deleted": True}
   
+  # handle 404
+  except Exception:
+    raise
+  
   except Exception as e:
     handle_error(e, cursor)
 
@@ -579,7 +611,6 @@ def unsave_post(post_id):
       """
         DELETE FROM saved_posts
         WHERE post_id = %s AND user_id = %s
-        RETURNING post_id
       """,
       (post_id, 1)
     )
@@ -594,6 +625,10 @@ def unsave_post(post_id):
     conn.commit()
     cursor.close() # close connection
     return {"deleted": True}
+  
+  # raise 404
+  except Exception:
+    raise
   
   except Exception as e:
     handle_error(e, cursor)
@@ -613,5 +648,218 @@ def get_saved_posts():
   for row in saved_posts:
     saved_post = {"post_id": row[0]}
     response.append(saved_post)
+  
+  return response
+
+# mark a section favorite
+def favorite_section(section_id):
+  # create a cursor
+  cursor = conn.cursor()
+
+  try:
+    # execute sql
+    cursor.execute(
+      """
+        INSERT INTO favorite_sections (section_id, user_id)
+        VALUES (%s, %s)
+        RETURNING section_id
+      """,
+      (section_id, 1)
+    )
+    row = cursor.fetchone() # fetch query results
+    conn.commit() # commit changes to DB
+    cursor.close() # close connections
+    return {"section_id": row[0]}
+  
+  except Exception as e:
+    handle_error(e, cursor)
+
+# unfavorite
+def unfavorite_section(section_id):
+  # create a cursor
+  cursor = conn.cursor()
+
+  try:
+    # execute sql
+    cursor.execute(
+      """
+        DELETE FROM favorite_sections 
+        WHERE section_id = %s AND user_id = %s
+        RETURNING section_id
+      """,
+      (section_id, 1)
+    )
+    row = cursor.fetchone() # fetch query results
+    
+    if row is None:
+      conn.rollback()
+      cursor.close()
+      raise HTTPException(status_code=404, detail="Not favorite")
+    
+    conn.commit()
+    cursor.close()
+    return {"deleted": True}
+  
+  # raise 404
+  except Exception:
+    raise
+  
+  except Exception as e:
+    handle_error(e, cursor)
+
+# get all the favorite sections
+def get_favorite_sections():
+  # create cursor
+  cursor = conn.cursor()
+
+  cursor.execute("SELECT section_id FROM favorite_sections WHERE user_id = %s", (1,))
+
+  # fetch query results
+  favorite_sections = cursor.fetchall()
+  cursor.close() # close connection
+
+  response = list()
+  for row in favorite_sections:
+    favorite_section = {"section_id": row[0]}
+    response.append(favorite_section)
+  
+  return response
+
+# create a tag
+def create_tag(tag_name):
+  cursor = conn.cursor()
+  try:
+    cursor.execute(
+      "INSERT INTO tags(name) VALUES(%s) RETURNING tag_id",
+      (tag_name,)
+    )
+    row = cursor.fetchone()
+    conn.commit()
+    cursor.close()
+    return {"tag_id": row[0]}
+  except Exception as e:
+    handle_error(e, cursor)
+
+# get all tags
+def get_tags():
+  cursor = conn.cursor()
+  cursor.execute("SELECT tag_id, name FROM tags")
+  tags = cursor.fetchall()
+  cursor.close()
+  
+  response = list()
+  for row in tags:
+    tag = TagResponse(tag_id=row[0], name=row[1])
+    response.append(tag)
+  
+  return response
+
+# get tags for a post
+def get_post_tags(post_id):
+  cursor = conn.cursor()
+  cursor.execute(
+    """
+      SELECT tags.tag_id, tags.name 
+      FROM tags
+      JOIN post_tags ON tags.tag_id = post_tags.tag_id
+      WHERE post_tags.post_id = %s
+    """,
+    (post_id,)
+  )
+  tags = cursor.fetchall()
+  cursor.close()
+  
+  response = list()
+  for row in tags:
+    tag = TagResponse(tag_id=row[0], name=row[1])
+    response.append(tag)
+  
+  return response
+
+# Add tag to post
+def add_tag_to_post(post_id, tag_id):
+  cursor = conn.cursor()
+  try:
+    cursor.execute(
+      """
+        INSERT INTO post_tags(post_id, tag_id) VALUES(%s, %s) 
+        RETURNING post_id""",
+      (post_id, tag_id)
+    )
+    row = cursor.fetchone()
+    conn.commit()
+    cursor.close()
+    return {"post_id": row[0]}
+  
+  except Exception as e:
+    handle_error(e, cursor)
+
+# Remove tag from post
+def remove_tag_from_post(post_id, tag_id):
+  cursor = conn.cursor()
+  try:
+    cursor.execute(
+      """
+        DELETE FROM post_tags 
+        WHERE post_id = %s AND tag_id = %s RETURNING post_id
+      """,
+      (post_id, tag_id)
+    )
+    row = cursor.fetchone()
+    
+    if row is None:
+      cursor.close()
+      raise HTTPException(status_code=404, detail="Tag not on post")
+    
+    conn.commit()
+    cursor.close()
+    return {"deleted": True}
+  
+  # raise 404
+  except Exception:
+    raise
+
+  except Exception as e:
+    handle_error(e, cursor)
+
+# create report
+def create_report(post_id, reason):
+  cursor = conn.cursor()
+  try:
+    cursor.execute(
+      """
+        INSERT INTO reports(post_id, user_id, reason, created_at)
+        VALUES(%s, %s, %s, NOW())
+        RETURNING report_id
+      """,
+      (post_id, 1, reason)
+    )
+    row = cursor.fetchone()
+    conn.commit()
+    cursor.close()
+    return {"report_id": row[0]}
+  
+  except Exception as e:
+    handle_error(e, cursor)
+
+# get reports
+def get_reports():
+  cursor = conn.cursor()
+  cursor.execute(
+    """
+      SELECT report_id, post_id, reason, created_at 
+      FROM reports 
+      WHERE user_id = %s
+    """, 
+    (1,)
+  )
+  reports = cursor.fetchall()
+  cursor.close()
+  
+  response = list()
+  for row in reports:
+    report = ReportResponse(report_id=row[0],post_id=row[1], reason=row[2], created_at=row[3])
+
+    response.append(report)
   
   return response
