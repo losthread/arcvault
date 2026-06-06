@@ -93,3 +93,15 @@ async def update_vote(post_id: int, vote: VoteCreate) -> dict:
 @router.delete('/votes/{post_id}')
 async def delete_vote(post_id: int) -> dict:
   return crud.delete_vote(post_id)
+
+@router.post('/saved-posts/{post_id}')
+async def save_post(post_id: int) -> dict:
+  return crud.save_post(post_id)
+
+@router.delete('/saved-posts/{post_id}')
+async def unsave_post(post_id: int) -> dict:
+  return crud.unsave_post(post_id)
+
+@router.get('/saved-posts')
+async def get_saved_posts() -> list:
+  return crud.get_saved_posts()
