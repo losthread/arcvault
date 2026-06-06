@@ -51,6 +51,9 @@ class TagResponse(BaseModel):
   tag_id: int
   name: str
 
+class TagCreate(BaseModel):
+  name: str
+
 # Votes
 class VoteCreate(BaseModel):
   post_id: int
@@ -69,20 +72,13 @@ class NoteResponse(BaseModel):
   body: str
   created_at: datetime
 
-# # Auth
-# class UserRegister(BaseModel):
-#   username: str
-#   email: str
-#   password: str
+# reports
+class ReportCreate(BaseModel):
+  post_id: int
+  reason: str
 
-# class UserLogin(BaseModel):
-#   email: EmailStr
-#   password: str
-
-# class UserResponse(BaseModel):
-#   user_id: int
-#   username: str
-#   email: str
-#   profile_picture_url: str | None = None
-#   bio: str | None = None
-#   created_at: datetime
+class ReportResponse(BaseModel):
+  report_id: int
+  post_id: int
+  reason: str
+  created_at: datetime
