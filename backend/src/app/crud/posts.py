@@ -17,6 +17,9 @@ def get_posts():
   # fetch query result as a list of tuples
   posts = cursor.fetchall()
 
+  # close cursor
+  cursor.close()
+
   # convert list to FolderResponse pydantic object 
   response = list()
   for row in posts:
@@ -31,8 +34,40 @@ def get_posts():
     )
     response.append(post)
 
+  return response
+
+# return all the posts inside a particular folder
+def get_posts_by_folder(folder_id):
+  # create a cursor to execute SQL
+  cursor = conn.cursor()
+  cursor.execute(
+    """
+      SELECT post_id, folder_id, user_id, title, content, created_at, updated_at 
+      FROM posts
+      WHERE folder_id = %s
+    """,
+    (folder_id,)
+  )
+
+  # fetch query result as a list of tuples
+  posts = cursor.fetchall()
+
   # close cursor
   cursor.close()
+
+  # convert list to FolderResponse pydantic object 
+  response = list()
+  for row in posts:
+    post = PostResponse(
+      post_id=row[0],
+      folder_id=row[1],
+      user_id=row[2],
+      title=row[3],
+      content=row[4],
+      created_at=row[5],
+      updated_at=row[6]
+    )
+    response.append(post)
 
   return response
 

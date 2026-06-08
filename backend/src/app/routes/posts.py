@@ -9,6 +9,12 @@ router = APIRouter()
 async def get_posts() -> list[PostResponse]:
   return p.get_posts()
 
+# get all posts inside a folder
+@router.get('/folders/{folder_id}/posts')
+async def get_posts_by_folder(folder_id: int) -> list[PostResponse]:
+  return p.get_posts_by_folder(folder_id)
+
+# create a post
 @router.post('/posts')
 async def create_post(post: PostCreate) -> dict:
   return p.create_post(post)
