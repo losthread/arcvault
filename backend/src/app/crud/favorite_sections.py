@@ -58,12 +58,19 @@ def unfavorite_section(section_id):
   except Exception as e:
     handle_error(e, cursor)
 
-# get all the favorite sections
+# get all the favorite sections of a user
 def get_favorite_sections():
   # create cursor
   cursor = conn.cursor()
 
-  cursor.execute("SELECT section_id FROM favorite_sections WHERE user_id = %s", (1,))
+  cursor.execute(
+    """
+    SELECT section_id 
+    FROM favorite_sections 
+    WHERE user_id = %s
+    """,
+    (1,)
+  )
 
   # fetch query results
   favorite_sections = cursor.fetchall()
