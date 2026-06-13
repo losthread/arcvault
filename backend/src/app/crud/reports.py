@@ -1,4 +1,4 @@
-from ..db import conn
+from ..database import conn
 from ..schemas import ReportResponse
 from .exception import handle_error
 

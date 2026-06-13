@@ -1,4 +1,4 @@
-from ..db import conn
+from ..database import conn
 from .exception import handle_error
 from ..schemas import ContributionResponse, PostResponse
 from fastapi import HTTPException

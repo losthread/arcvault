@@ -1,4 +1,4 @@
-from ..db import conn
+from ..database import conn
 from ..schemas import TagResponse
 from .exception import handle_error
 from fastapi import HTTPException

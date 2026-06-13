@@ -1,4 +1,4 @@
-from ..db import conn
+from ..database import conn
 from ..schemas import SectionResponse
 
 # return all the sections

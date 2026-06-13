@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .routes import contribution, favorite_sections, folders, notes, posts, reports, saved_posts, sections, tags, votes
+from .routes import contribution, favorite_sections, folders, notes, posts, reports, saved_posts, sections, tags, votes, users
 import uvicorn
 
 # fastAPI app instance - contains: settings, middleware, endpoints
@@ -17,6 +17,7 @@ app.include_router(saved_posts.router)
 app.include_router(sections.router)
 app.include_router(tags.router)
 app.include_router(votes.router)
+app.include_router(users.router)
 
 # Run the dev ASGI server on localhost when main.py is run
 if __name__ == "__main__":

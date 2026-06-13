@@ -1,4 +1,4 @@
-from ..db import conn
+from ..database import conn
 from psycopg2.errors import UniqueViolation, ForeignKeyViolation
 from fastapi import HTTPException
 
@@ -15,6 +15,6 @@ def handle_error(e, cursor):
   elif isinstance(e, ForeignKeyViolation):
     raise HTTPException(status_code=400, detail="Invalid reference")
   
-  # Internal server
+  # Internal server error
   else:
     raise HTTPException(status_code=500, detail="Internal server error")
